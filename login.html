@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Orbit Tasks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="config.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="hero-panel">
+            <p class="eyebrow">Focus Mode</p>
+            <h1>Plan less. Finish more.</h1>
+            <p class="hero-copy">Orbit Tasks keeps your daily priorities in one focused lane with zero noise.</p>
+        </section>
+
+        <section class="form-panel">
+            <div class="card">
+                <h2>Sign In</h2>
+                <p class="subtext">Welcome back. Let us pick up where you left off.</p>
+
+                <form id="loginForm" novalidate>
+                    <label for="loginEmail">Email</label>
+                    <input id="loginEmail" name="email" type="email" placeholder="you@example.com" required>
+
+                    <label for="loginPassword">Password</label>
+                    <input id="loginPassword" name="password" type="password" placeholder="Enter password" required>
+
+                    <button type="submit">Login</button>
+                    <p id="loginMessage" class="status" aria-live="polite"></p>
+                </form>
+
+                <p class="switch-link">No account yet? <a href="register.html">Create one</a></p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

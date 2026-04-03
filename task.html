@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks | Orbit Tasks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="config.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body class="task-page">
+    <div class="app-bg-shape"></div>
+    <main class="task-shell">
+        <header class="task-header card">
+            <div>
+                <p class="eyebrow">Daily Dashboard</p>
+                <h1>Orbit Tasks</h1>
+                <p id="welcomeUser" class="subtext"></p>
+            </div>
+            <button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
+        </header>
+
+        <section class="card">
+            <h2>Add New Task</h2>
+            <form id="taskForm" class="task-form" novalidate>
+                <input id="taskTitle" name="title" type="text" placeholder="Write documentation draft" required>
+                <input id="taskDescription" name="description" type="text" placeholder="Add short description" required>
+                <select id="taskStatus" name="status" aria-label="Status">
+                    <option value="PENDING" selected>Pending</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+                <button type="submit">Add Task</button>
+            </form>
+            <p id="taskMessage" class="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card">
+            <div class="list-head">
+                <h2>My Items</h2>
+                <p id="taskCounter" class="subtext"></p>
+            </div>
+            <ul id="taskList" class="task-list"></ul>
+        </section>
+    </main>
+</body>
+</html>
