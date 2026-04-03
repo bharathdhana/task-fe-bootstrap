@@ -1,6 +1,12 @@
 (function () {
 	const AUTH_KEY = "orbit_auth_session";
-	const API_BASE_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://localhost:8080/api";
+	const API_BASE_URL_RAW = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://localhost:8080";
+	const API_BASE_URL = String(API_BASE_URL_RAW).replace(/\/+$/, "");
+
+	function normalizePath(path) {
+		const raw = String(path || "");
+		return raw.startsWith("/") ? raw : "/" + raw;
+	}
 
 	function readJSON(key, fallbackValue) {
 		try {
@@ -14,8 +20,16 @@
 	function showStatus(element, message, mode) {
 		if (!element) return;
 		element.textContent = message;
-		element.className = "status";
-		if (mode) element.classList.add(mode);
+		element.className = "small mt-2";
+		if (mode === "success") {
+			element.classList.add("text-success");
+			return;
+		}
+		if (mode === "error") {
+			element.classList.add("text-danger");
+			return;
+		}
+		element.classList.add("text-muted");
 	}
 
 	const getAuth = function () {
@@ -44,8 +58,9 @@
 	async function api(path, options) {
 		try {
  			const requestOptions = Object.assign({}, options || {});
+			const normalizedPath = normalizePath(path);
 
-			const response = await fetch(API_BASE_URL + path, requestOptions);
+			const response = await fetch(API_BASE_URL + normalizedPath, requestOptions);
 			const contentType = response.headers.get("content-type") || "";
 			let payload = null;
 			let rawBody = "";
@@ -66,8 +81,10 @@
 
 			if (!response.ok) {
 				const serverMessage = payload && (payload.message || payload.error) ? payload.message || payload.error : rawBody;
-				const message = serverMessage || ("HTTP " + response.status + " " + response.statusText + " at " + API_BASE_URL + path);
-				throw new Error(message);
+				const message = serverMessage || ("HTTP " + response.status + " " + response.statusText + " at " + API_BASE_URL + normalizedPath);
+				const requestError = new Error(message);
+				requestError.status = response.status;
+				throw requestError;
 			}
 
 			if (payload !== null) return payload;
@@ -83,14 +100,18 @@
 
 	async function apiWithFallback(paths, options) {
 		let lastError = new Error("Request failed");
-		for (let i = 0; i < paths.length; i += 1) {
+		const uniquePaths = Array.from(new Set((paths || []).map(normalizePath)));
+		if (!uniquePaths.length) {
+			throw lastError;
+		}
+		for (let i = 0; i < uniquePaths.length; i += 1) {
 			try {
-				return await api(paths[i], options);
+				return await api(uniquePaths[i], options);
 			} catch (error) {
 				lastError = error;
-				const text = String(error && error.message ? error.message : "").toLowerCase();
-				const tryNext = text.includes("http 404") || text.includes("http 403");
-				if (!tryNext || i === paths.length - 1) {
+				const statusCode = error && typeof error.status === "number" ? error.status : 0;
+				const tryNext = statusCode === 403 || statusCode === 404 || statusCode === 405;
+				if (!tryNext || i === uniquePaths.length - 1) {
 					throw lastError;
 				}
 			}
@@ -121,6 +142,12 @@
 
 	function statusToClass(status) {
 		return String(status || "PENDING").toLowerCase().replace(/\s+/g, "-").replace(/_/g, "-");
+	}
+
+	function statusToBadgeClass(status) {
+		if (status === "COMPLETED") return "text-bg-success";
+		if (status === "IN_PROGRESS") return "text-bg-warning";
+		return "text-bg-secondary";
 	}
 
 	function initRegisterPage() {
@@ -240,8 +267,8 @@
 
 			if (!tasks.length) {
 				const empty = document.createElement("li");
-				empty.className = "task-item";
-				empty.innerHTML = "<div><strong>No tasks yet</strong><p class=\"task-meta\">Add one above to begin.</p></div>";
+				empty.className = "list-group-item text-center py-4";
+				empty.innerHTML = "<div><strong>No tasks yet</strong><p class=\"text-muted small mb-0\">Add one above to begin.</p></div>";
 				list.appendChild(empty);
 				return;
 			}
@@ -252,31 +279,43 @@
 				})
 				.forEach(function (task) {
 					const item = document.createElement("li");
-					item.className = "task-item" + (task.done ? " completed" : "");
+					item.className = "list-group-item d-flex align-items-start gap-3";
+					if (task.done) {
+						item.classList.add("list-group-item-success");
+					}
 
 					const descriptionText = task.description || "No description";
 					const checkbox = document.createElement("input");
 					checkbox.type = "checkbox";
 					checkbox.checked = task.done;
+					checkbox.className = "form-check-input mt-1";
 					checkbox.setAttribute("aria-label", "Complete task");
 					checkbox.dataset.action = "toggle";
 					checkbox.dataset.id = String(task.id);
 
 					const textWrap = document.createElement("div");
+					textWrap.className = "flex-grow-1";
 					const title = document.createElement("strong");
 					title.textContent = task.title;
+					title.className = "d-block";
+					if (task.done) {
+						title.classList.add("text-decoration-line-through");
+					}
 					const meta = document.createElement("p");
-					meta.className = "task-meta";
+					meta.className = "text-muted small mb-0";
 					meta.textContent = descriptionText;
 					textWrap.appendChild(title);
 					textWrap.appendChild(meta);
 
 					const pill = document.createElement("span");
-					pill.className = "priority-pill priority-" + statusToClass(task.status);
+					pill.className = "badge rounded-pill " + statusToBadgeClass(task.status);
+					if (task.status === "IN_PROGRESS") {
+						pill.classList.add("text-dark");
+					}
 					pill.textContent = task.status;
 
 					const deleteBtn = document.createElement("button");
-					deleteBtn.className = "task-action delete";
+					deleteBtn.className = "btn btn-sm btn-outline-danger";
 					deleteBtn.type = "button";
 					deleteBtn.dataset.action = "delete";
 					deleteBtn.dataset.id = String(task.id);
